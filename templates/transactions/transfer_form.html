@@ -1,0 +1,139 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | ExpenseFlow{% endblock %}
+{% block page_heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <h3 class="fw-bold mb-1">{{ page_title }}</h3>
+    <p class="text-muted mb-0">
+        Move money between your own accounts without recording it as income or expense.
+    </p>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+
+        {% if balances_visible and form %}
+
+            <form method="POST">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label for="{{ form.from_account.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Source Account
+                        </label>
+
+                        {{ form.from_account }}
+
+                        {% for error in form.from_account.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.to_account.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Destination Account
+                        </label>
+
+                        {{ form.to_account }}
+
+                        {% for error in form.to_account.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.amount.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Transfer Amount
+                        </label>
+
+                        {{ form.amount }}
+
+                        {% if form.amount.help_text %}
+                            <div class="form-text">{{ form.amount.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in form.amount.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.date.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Transfer Date
+                        </label>
+
+                        {{ form.date }}
+
+                        {% for error in form.date.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.description.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Description
+                        </label>
+
+                        {{ form.description }}
+
+                        {% for error in form.description.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+                <div class="alert alert-info mt-4 mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Transfers do not count as income or expenses.
+                    Both accounts must use the same currency.
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-1"></i>
+                        {{ button_text }}
+                    </button>
+
+                    <a href="{% url 'transfer_list' %}"
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+
+            </form>
+
+        {% else %}
+
+            <div class="text-center py-4">
+                <i class="bi bi-lock fs-1 text-muted"></i>
+                <h5 class="fw-bold mt-3">Financial information is locked</h5>
+                <p class="text-muted">
+                    Click the eye icon in the top navigation and verify your
+                    password to create or edit a transfer.
+                </p>
+            </div>
+
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

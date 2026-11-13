@@ -1,0 +1,539 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Dashboard | ExpenseFlow{% endblock %}
+{% block page_heading %}Overview{% endblock %}
+
+{% block content %}
+
+<!-- Welcome Section -->
+<div class="welcome-section">
+    <div>
+        <h3>Welcome back, {{ user.username }}!</h3>
+        <p>Here's what's happening with your finances.</p>
+    </div>
+
+    <div class="welcome-actions d-flex flex-wrap gap-2">
+
+        <a href="{% url 'transaction_create' %}"
+           class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i>
+            Add Transaction
+        </a>
+
+        {% if balances_visible %}
+
+            <form method="post"
+                  action="{% url 'toggle_balance_visibility' %}"
+                  id="hideBalancesForm">
+
+                {% csrf_token %}
+                <input type="hidden" name="action" value="hide">
+
+                <input type="hidden"
+                       name="next"
+                       value="{{ request.get_full_path }}">
+
+                <button type="submit"
+                        class="btn btn-outline-secondary">
+                    <i class="bi bi-eye-slash"></i>
+                    Hide Amounts
+                </button>
+            </form>
+
+        {% else %}
+
+            <button type="button"
+                    class="btn btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#balancePasswordModal">
+
+                <i class="bi bi-eye"></i>
+                View Amounts
+            </button>
+
+        {% endif %}
+
+    </div>
+</div>
+
+
+<!-- Dashboard Account Filter -->
+<div class="dashboard-controls mb-4">
+
+    <div class="filter-card">
+
+        <form method="get"
+              class="d-flex flex-wrap align-items-end gap-3">
+
+            <div>
+                <label for="accountFilter"
+                       class="form-label fw-semibold">
+                    View finances for
+                </label>
+
+                <select name="account"
+                        id="accountFilter"
+                        class="form-select">
+
+                    <option value="all"
+                        {% if selected_filter == 'all' %}selected{% endif %}>
+                        All Accounts
+                    </option>
+
+                    <option value="BANK"
+                        {% if selected_filter == 'BANK' %}selected{% endif %}>
+                        All Bank Accounts
+                    </option>
+
+                    <option value="WALLET"
+                        {% if selected_filter == 'WALLET' %}selected{% endif %}>
+                        All Digital Wallets
+                    </option>
+
+                    <option value="CASH"
+                        {% if selected_filter == 'CASH' %}selected{% endif %}>
+                        Cash
+                    </option>
+
+                    <option value="OTHER"
+                        {% if selected_filter == 'OTHER' %}selected{% endif %}>
+                        Other Accounts
+                    </option>
+
+                    {% for account in accounts %}
+                        <option value="{{ account.id }}"
+                            {% if selected_filter == account.id|stringformat:"s" %}selected{% endif %}>
+                            {{ account.name }}
+                        </option>
+                    {% endfor %}
+
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-dark">
+                <i class="bi bi-funnel"></i>
+                Apply Filter
+            </button>
+
+            <a href="{% url 'dashboard' %}"
+               class="btn btn-outline-secondary">
+                Reset
+            </a>
+
+        </form>
+
+        <small class="text-muted d-block mt-2">
+            Currently viewing: {{ filter_label }}
+        </small>
+
+    </div>
+
+</div>
+
+
+<!-- Financial Summary -->
+<div class="row g-4 mb-4">
+
+    <!-- Total Balance -->
+    <div class="col-md-6 col-xl-3">
+        <div class="summary-card balance-card">
+
+            <div class="summary-top">
+                <span>Total Balance</span>
+                <i class="bi bi-wallet2"></i>
+            </div>
+
+            <div class="summary-value">
+                {% if balances_visible %}
+                    {{ currency }} {{ total_balance|floatformat:2 }}
+                {% else %}
+                    <span class="balance-hidden">••••••••</span>
+                {% endif %}
+            </div>
+
+            <small>Balance of selected accounts</small>
+
+        </div>
+    </div>
+
+
+    <!-- Total Income -->
+    <div class="col-md-6 col-xl-3">
+        <div class="summary-card">
+
+            <div class="summary-top">
+                <span>Total Income</span>
+
+                <div class="icon-box income-icon">
+                    <i class="bi bi-arrow-down-left"></i>
+                </div>
+            </div>
+
+            <div class="summary-value">
+                {% if balances_visible %}
+                    {{ currency }} {{ total_income|floatformat:2 }}
+                {% else %}
+                    <span class="balance-hidden">••••••••</span>
+                {% endif %}
+            </div>
+
+            <small>Income from selected accounts</small>
+
+        </div>
+    </div>
+
+
+    <!-- Total Expenses -->
+    <div class="col-md-6 col-xl-3">
+        <div class="summary-card">
+
+            <div class="summary-top">
+                <span>Total Expenses</span>
+
+                <div class="icon-box expense-icon">
+                    <i class="bi bi-arrow-up-right"></i>
+                </div>
+            </div>
+
+            <div class="summary-value">
+                {% if balances_visible %}
+                    {{ currency }} {{ total_expenses|floatformat:2 }}
+                {% else %}
+                    <span class="balance-hidden">••••••••</span>
+                {% endif %}
+            </div>
+
+            <small>Expenses from selected accounts</small>
+
+        </div>
+    </div>
+
+
+    <!-- Overall Expenses -->
+    <div class="col-md-6 col-xl-3">
+        <div class="summary-card">
+
+            <div class="summary-top">
+                <span>Overall Expenses</span>
+
+                <div class="icon-box expense-icon">
+                    <i class="bi bi-globe"></i>
+                </div>
+            </div>
+
+            <div class="summary-value">
+                {% if balances_visible %}
+                    {{ currency }} {{ overall_expenses|floatformat:2 }}
+                {% else %}
+                    <span class="balance-hidden">••••••••</span>
+                {% endif %}
+            </div>
+
+            <small>Expenses across all accounts</small>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Monthly Overview -->
+<div class="section-heading">
+    <div>
+        <h5>Monthly Overview</h5>
+        <p>Your income and expenses this month</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+
+    <!-- Monthly Income -->
+    <div class="col-md-6">
+        <div class="monthly-card">
+
+            <div class="monthly-icon income-icon">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+
+            <div>
+                <small>Monthly Income</small>
+
+                <h4>
+                    {% if balances_visible %}
+                        {{ currency }} {{ month_income|floatformat:2 }}
+                    {% else %}
+                        ••••••••
+                    {% endif %}
+                </h4>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Monthly Expenses -->
+    <div class="col-md-6">
+        <div class="monthly-card">
+
+            <div class="monthly-icon expense-icon">
+                <i class="bi bi-graph-down-arrow"></i>
+            </div>
+
+            <div>
+                <small>Monthly Expenses</small>
+
+                <h4>
+                    {% if balances_visible %}
+                        {{ currency }} {{ month_expenses|floatformat:2 }}
+                    {% else %}
+                        ••••••••
+                    {% endif %}
+                </h4>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- Recent Transactions -->
+<div class="section-heading">
+
+    <div>
+        <h5>Recent Transactions</h5>
+        <p>Your latest financial activities</p>
+    </div>
+
+    <a href="{% url 'transaction_list' %}"
+       class="view-all">
+        View all <i class="bi bi-arrow-right"></i>
+    </a>
+
+</div>
+
+
+<div class="transaction-table-wrapper">
+
+    <div class="table-responsive">
+
+        <table class="table transaction-table align-middle">
+
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Category</th>
+                    <th>Account</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th class="text-end">Amount</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for transaction in recent_transactions %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                {{ transaction.description|default:"Transaction" }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ transaction.category.name }}
+                        </td>
+
+                        <td>
+                            {{ transaction.account.name }}
+                        </td>
+
+                        <td>
+                            {{ transaction.date|date:"M d, Y" }}
+                        </td>
+
+                        <td>
+                            {% if transaction.transaction_type == 'INCOME' %}
+
+                                <span class="transaction-badge income-badge">
+                                    Income
+                                </span>
+
+                            {% else %}
+
+                                <span class="transaction-badge expense-badge">
+                                    Expense
+                                </span>
+
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end fw-semibold">
+
+                            {% if balances_visible %}
+
+                                {% if transaction.transaction_type == 'INCOME' %}
+
+                                    <span class="text-success">
+                                        + {{ currency }} {{ transaction.amount|floatformat:2 }}
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="text-danger">
+                                        - {{ currency }} {{ transaction.amount|floatformat:2 }}
+                                    </span>
+
+                                {% endif %}
+
+                            {% else %}
+
+                                <span class="balance-hidden">
+                                    ••••••••
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="6" class="empty-state">
+
+                            <i class="bi bi-receipt"></i>
+
+                            <h6>No transactions yet</h6>
+
+                            <p>
+                                Start by adding your first income or expense.
+                            </p>
+
+                            <a href="{% url 'transaction_create' %}"
+                               class="btn btn-primary btn-sm">
+                                Add your first transaction
+                            </a>
+
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+
+<!-- Password Verification Modal -->
+<div class="modal fade"
+     id="balancePasswordModal"
+     tabindex="-1"
+     aria-labelledby="balancePasswordLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title" id="balancePasswordLabel">
+                    <i class="bi bi-shield-lock me-2"></i>
+                    Financial Information Protected
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
+                </button>
+
+            </div>
+
+            <form method="post"
+                  action="{% url 'toggle_balance_visibility' %}">
+
+                {% csrf_token %}
+
+                <div class="modal-body">
+
+                    <p class="text-muted">
+                        Verify your ExpenseFlow password to view your
+                        balances, income, expenses and transaction amounts.
+                    </p>
+
+                    <input type="hidden"
+                           name="action"
+                           value="reveal">
+
+                    <input type="hidden"
+                           name="next"
+                           value="{{ request.get_full_path }}">
+
+                    <label for="balancePassword" class="form-label">
+                        Account Password
+                    </label>
+
+                    <input type="password"
+                           id="balancePassword"
+                           name="password"
+                           class="form-control"
+                           placeholder="Enter your password"
+                           autocomplete="current-password"
+                           required>
+
+                </div>
+
+                <div class="modal-footer">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary"
+                            data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-unlock me-1"></i>
+                        Verify &amp; View
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Automatically hide financial amounts after 60 seconds -->
+{% if balances_visible %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        setTimeout(function () {
+
+            const hideForm = document.getElementById('hideBalancesForm');
+
+            if (hideForm) {
+                hideForm.requestSubmit();
+            }
+
+        }, 60000);
+
+    });
+</script>
+{% endif %}
+
+{% endblock %}

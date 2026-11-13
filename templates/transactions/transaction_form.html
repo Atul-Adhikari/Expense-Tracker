@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | ExpenseFlow{% endblock %}
+{% block page_heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+    <div class="col-lg-9 col-xl-8">
+
+        <div class="transaction-table-wrapper p-4">
+
+            <div class="mb-4">
+                <h3 class="fw-bold mb-1">{{ page_title }}</h3>
+                <p class="text-muted mb-0">
+                    Record your income or expenses.
+                </p>
+            </div>
+
+            {% if balances_visible and form %}
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Transaction Type
+                            </label>
+                            {{ form.transaction_type }}
+                            {% for error in form.transaction_type.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Account
+                            </label>
+                            {{ form.account }}
+                            {% for error in form.account.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Category
+                            </label>
+                            {{ form.category }}
+                            {% for error in form.category.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Amount
+                            </label>
+                            {{ form.amount }}
+                            {% for error in form.amount.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Date
+                            </label>
+                            {{ form.date }}
+                            {% for error in form.date.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Payment Method
+                            </label>
+                            {{ form.payment_method }}
+                            {% for error in form.payment_method.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Description
+                            </label>
+                            {{ form.description }}
+                            {% for error in form.description.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Notes
+                            </label>
+                            {{ form.notes }}
+                            {% for error in form.notes.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-1"></i>
+                            {{ button_text }}
+                        </button>
+
+                        <a href="{% url 'transaction_list' %}"
+                        class="btn btn-outline-secondary">
+                            Cancel
+                        </a>
+
+                    </div>
+
+                </form>
+            {% else %}
+                <div class="text-center py-5">
+
+                    <i class="bi bi-shield-lock"
+                    style="font-size: 42px; color: #94a3b8;"></i>
+
+                    <h5 class="mt-3">Financial Information Locked</h5>
+
+                    <p class="text-muted">
+                        Click the eye icon above and verify your password
+                        to access this transaction form.
+                    </p>
+                </div>
+        {% endif %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,137 @@
+
+{% extends 'base.html' %}
+{% load date_tags %}
+{% block title %}Transfers | ExpenseFlow{% endblock %}
+{% block page_heading %}Account Transfers{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Account Transfers</h3>
+        <p class="text-muted mb-0">
+            Track money moved between your accounts.
+        </p>
+    </div>
+
+    <a href="{% url 'transfer_create' %}" class="btn btn-primary">
+        <i class="bi bi-arrow-left-right me-2"></i>
+        New Transfer
+    </a>
+</div>
+
+{% if not balances_visible %}
+    <div class="alert alert-warning rounded-4">
+        <i class="bi bi-lock me-2"></i>
+        Transfer amounts are hidden. Use the eye icon in the top navigation
+        to verify your password.
+    </div>
+{% endif %}
+
+<div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4">
+
+        {% if transfers %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>From</th>
+                            <th></th>
+                            <th>To</th>
+                            <th>Description</th>
+                            <th class="text-end">Amount</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for transfer in transfers %}
+                            <tr>
+                                <td>{% preferred_date transfer.date %}</td>
+
+                                <td>
+                                    <span class="fw-semibold">
+                                        {{ transfer.from_account.name }}
+                                    </span>
+                                </td>
+
+                                <td class="text-center text-muted">
+                                    <i class="bi bi-arrow-right"></i>
+                                </td>
+
+                                <td>
+                                    <span class="fw-semibold">
+                                        {{ transfer.to_account.name }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    {{ transfer.description|default:"—" }}
+                                </td>
+
+                                <td class="text-end fw-semibold">
+                                    {% if balances_visible %}
+                                        {{ transfer.from_account.currency }}
+                                        {{ transfer.amount|floatformat:2 }}
+                                    {% else %}
+                                        <span class="balance-hidden">••••••••</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="text-end">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-light"
+                                                data-bs-toggle="dropdown"
+                                                aria-label="Transfer actions">
+                                            <i class="bi bi-three-dots"></i>
+                                        </button>
+
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item"
+                                                   href="{% url 'transfer_update' transfer.pk %}">
+                                                    <i class="bi bi-pencil me-2"></i>
+                                                    Edit
+                                                </a>
+                                            </li>
+
+                                            <li>
+                                                <form method="POST"
+                                                      action="{% url 'transfer_delete' transfer.pk %}"
+                                                      onsubmit="return confirm('Delete this transfer?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit"
+                                                            class="dropdown-item text-danger">
+                                                        <i class="bi bi-trash me-2"></i>
+                                                        Delete
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-arrow-left-right fs-1 text-muted"></i>
+                <h5 class="fw-bold mt-3">No transfers yet</h5>
+                <p class="text-muted">
+                    Transfers between your accounts will appear here.
+                </p>
+                <a href="{% url 'transfer_create' %}" class="btn btn-primary">
+                    Create Your First Transfer
+                </a>
+            </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,403 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | ExpenseFlow{% endblock %}
+{% block page_heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <a href="{% url 'recurring_list' %}"
+       class="text-decoration-none text-muted">
+        <i class="bi bi-arrow-left me-1"></i>
+        Back to Recurring Transactions
+    </a>
+
+    <h3 class="fw-bold mt-3 mb-1">{{ page_title }}</h3>
+    <p class="text-muted mb-0">
+        Configure an income or expense schedule that ExpenseFlow
+        can generate automatically.
+    </p>
+</div>
+
+{% if not balances_visible or not form %}
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-lock text-muted" style="font-size: 3rem;"></i>
+
+            <h5 class="fw-bold mt-3">Financial information is locked</h5>
+
+            <p class="text-muted mb-0">
+                Verify your password using the eye icon to create or
+                edit recurring schedules.
+            </p>
+        </div>
+    </div>
+
+{% else %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <!-- Basic Information -->
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-info-circle me-2 text-primary"></i>
+                    Basic Information
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label for="{{ form.transaction_type.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Transaction Type <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.transaction_type }}
+
+                        {% for error in form.transaction_type.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.category.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Category <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.category }}
+
+                        {% if form.category.help_text %}
+                            <div class="form-text">{{ form.category.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in form.category.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.account.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Account <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.account }}
+
+                        {% for error in form.account.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.amount.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Amount <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.amount }}
+
+                        {% if form.amount.help_text %}
+                            <div class="form-text">{{ form.amount.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in form.amount.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.description.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Description
+                        </label>
+
+                        {{ form.description }}
+
+                        {% for error in form.description.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.payment_method.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Payment Method
+                        </label>
+
+                        {{ form.payment_method }}
+
+                        {% for error in form.payment_method.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-12">
+                        <label for="{{ form.notes.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Notes
+                        </label>
+
+                        {{ form.notes }}
+
+                        {% for error in form.notes.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Schedule Configuration -->
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-header bg-white py-3">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-calendar-repeat me-2 text-primary"></i>
+                    Schedule Configuration
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label for="{{ form.frequency.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Frequency <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.frequency }}
+
+                        {% for error in form.frequency.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="{{ form.interval.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Repeat Every <span class="text-danger">*</span>
+                        </label>
+
+                        <div class="input-group">
+                            {{ form.interval }}
+                            <span class="input-group-text" id="interval-unit">
+                                period(s)
+                            </span>
+                        </div>
+
+                        {% if form.interval.help_text %}
+                            <div class="form-text">{{ form.interval.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in form.interval.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="{{ form.start_date.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Start Date <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.start_date }}
+
+                        {% if form.start_date.help_text %}
+                            <div class="form-text">{{ form.start_date.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in form.start_date.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="{{ form.next_due_date.id_for_label }}"
+                               class="form-label fw-semibold">
+                            Next Due Date <span class="text-danger">*</span>
+                        </label>
+
+                        {{ form.next_due_date }}
+
+                        {% if form.next_due_date.help_text %}
+                            <div class="form-text">{{ form.next_due_date.help_text }}</div>
+                        {% endif %}
+
+                        {% for error in form.next_due_date.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="{{ form.end_date.id_for_label }}"
+                               class="form-label fw-semibold">
+                            End Date
+                        </label>
+
+                        {{ form.end_date }}
+
+                        <div class="form-text">
+                            Leave empty for an ongoing schedule.
+                        </div>
+
+                        {% for error in form.end_date.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div class="card border-0 shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <div class="form-check">
+                    {{ form.is_active }}
+
+                    <label class="form-check-label fw-semibold"
+                           for="{{ form.is_active.id_for_label }}">
+                        Activate this schedule
+                    </label>
+                </div>
+
+                <div class="form-text mt-1">
+                    Active schedules are processed automatically when their
+                    next due date arrives.
+                </div>
+
+                {% for error in form.is_active.errors %}
+                    <div class="text-danger small mt-1">{{ error }}</div>
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex flex-wrap justify-content-end gap-2 mb-4">
+
+            <a href="{% url 'recurring_list' %}"
+               class="btn btn-outline-secondary">
+                Cancel
+            </a>
+
+            <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-check-lg me-1"></i>
+
+                {% if schedule %}
+                    Save Changes
+                {% else %}
+                    Create Schedule
+                {% endif %}
+            </button>
+
+        </div>
+
+    </form>
+
+{% endif %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const transactionType = document.getElementById(
+        'id_transaction_type'
+    );
+
+    const categoryField = document.getElementById(
+        'id_category'
+    );
+
+    const frequencyField = document.getElementById(
+        'id_frequency'
+    );
+
+    const intervalUnit = document.getElementById('interval-unit');
+
+    if (!transactionType || !categoryField) {
+        return;
+    }
+
+    // Category ID mapped to its transaction type.
+    const categoryTypes = {
+        {% for category in form.fields.category.queryset %}
+            "{{ category.pk }}": "{{ category.category_type|escapejs }}"{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    function filterCategories() {
+
+        const selectedType = transactionType.value;
+
+        Array.from(categoryField.options).forEach(function(option) {
+
+            if (!option.value) {
+                return;
+            }
+
+            const matches =
+                categoryTypes[option.value] === selectedType;
+
+            option.hidden = !matches;
+            option.disabled = !matches;
+
+            if (!matches && option.selected) {
+                categoryField.value = '';
+            }
+
+        });
+    }
+
+    transactionType.addEventListener('change', filterCategories);
+
+    filterCategories();
+
+    // Update the interval unit based on frequency.
+    if (frequencyField && intervalUnit) {
+
+        const units = {
+            DAILY: 'day(s)',
+            WEEKLY: 'week(s)',
+            MONTHLY: 'month(s)',
+            YEARLY: 'year(s)'
+        };
+
+        function updateIntervalUnit() {
+            intervalUnit.textContent =
+                units[frequencyField.value] || 'period(s)';
+        }
+
+        frequencyField.addEventListener(
+            'change',
+            updateIntervalUnit
+        );
+
+        updateIntervalUnit();
+    }
+
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,354 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Analytics | ExpenseFlow{% endblock %}
+{% block page_heading %}Financial Analytics{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Financial Analytics</h3>
+        <p class="text-muted mb-0">
+            Understand your income, expenses and financial trends.
+        </p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+        <form method="GET" class="row g-3 align-items-end">
+
+            <div class="col-md-3">
+                <label for="start_date" class="form-label fw-semibold">
+                    Start date
+                </label>
+                <input
+                    type="date"
+                    name="start_date"
+                    id="start_date"
+                    class="form-control"
+                    value="{{ start_date|date:'Y-m-d' }}"
+                >
+            </div>
+
+            <div class="col-md-3">
+                <label for="end_date" class="form-label fw-semibold">
+                    End date
+                </label>
+                <input
+                    type="date"
+                    name="end_date"
+                    id="end_date"
+                    class="form-control"
+                    value="{{ end_date|date:'Y-m-d' }}"
+                >
+            </div>
+
+            <div class="col-md-3">
+                <label for="currency" class="form-label fw-semibold">
+                    Currency
+                </label>
+                <select name="currency" id="currency" class="form-select">
+                    {% for currency in available_currencies %}
+                        <option
+                            value="{{ currency }}"
+                            {% if currency == selected_currency %}selected{% endif %}
+                        >
+                            {{ currency }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary flex-grow-1">
+                    <i class="bi bi-funnel me-1"></i> Apply
+                </button>
+                <a href="{% url 'analytics_dashboard' %}"
+                   class="btn btn-outline-secondary">
+                    Reset
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% if not has_accounts %}
+
+    <div class="alert alert-info rounded-4">
+        <i class="bi bi-info-circle me-2"></i>
+        Add an account before viewing financial analytics.
+    </div>
+
+{% elif not balances_visible %}
+
+    <div class="alert alert-warning rounded-4">
+        <i class="bi bi-lock me-2"></i>
+        Your financial analytics are locked.
+        Use the eye icon in the top navigation and verify your password
+        to view financial figures and charts.
+    </div>
+
+{% else %}
+
+    <!-- Summary cards -->
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="text-muted small mb-2">
+                        Total Income
+                    </div>
+                    <h3 class="fw-bold text-success mb-0">
+                        {{ selected_currency }}
+                        {{ total_income|floatformat:2 }}
+                    </h3>
+                    <div class="small text-muted mt-2">
+                        For the selected date range
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="text-muted small mb-2">
+                        Total Expenses
+                    </div>
+                    <h3 class="fw-bold text-danger mb-0">
+                        {{ selected_currency }}
+                        {{ total_expenses|floatformat:2 }}
+                    </h3>
+                    <div class="small text-muted mt-2">
+                        For the selected date range
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="text-muted small mb-2">
+                        Net Savings
+                    </div>
+                    <h3 class="fw-bold mb-0 {% if net_savings >= 0 %}text-primary{% else %}text-danger{% endif %}">
+                        {{ selected_currency }}
+                        {{ net_savings|floatformat:2 }}
+                    </h3>
+                    <div class="small text-muted mt-2">
+                        Income minus expenses
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Savings rate -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="fw-bold mb-0">Savings Rate</h5>
+                <span class="fw-bold text-primary">
+                    {{ savings_rate|floatformat:2 }}%
+                </span>
+            </div>
+
+            <div class="progress" style="height: 10px;">
+                <div
+                    class="progress-bar bg-primary"
+                    role="progressbar"
+                    style="width: {% if savings_rate > 100 %}100{% elif savings_rate > 0 %}{{ savings_rate }}{% else %}0{% endif %}%"
+                    aria-valuenow="{{ savings_rate }}"
+                    aria-valuemin="0"
+                    aria-valuemax="100">
+                </div>
+            </div>
+
+            <small class="text-muted d-block mt-2">
+                Calculated as net savings divided by total income.
+            </small>
+        </div>
+    </div>
+
+    <!-- Monthly chart -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-1">Monthly Income vs Expenses</h5>
+            <p class="text-muted small mb-4">
+                Compare your monthly income and expenses.
+            </p>
+            <div style="height: 320px;">
+                <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category chart -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-1">Expense Breakdown</h5>
+            <p class="text-muted small mb-4">
+                See how your expenses are distributed across categories.
+            </p>
+
+            {% if category_labels %}
+                <div style="height: 320px;">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-pie-chart fs-1 d-block mb-2"></i>
+                    No expense records found for this period.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Account summaries -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-1">Account Balances</h5>
+            <p class="text-muted small mb-4">
+                Current calculated balances for your active
+                {{ selected_currency }} accounts.
+            </p>
+
+            {% if account_summaries %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Account</th>
+                                <th>Type</th>
+                                <th class="text-end">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for account in account_summaries %}
+                                <tr>
+                                    <td class="fw-semibold">{{ account.name }}</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">
+                                            {{ account.account_type }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end fw-semibold">
+                                        {{ selected_currency }}
+                                        {{ account.balance|floatformat:2 }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="text-muted mb-0">
+                    No active accounts found for this currency.
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    {{ monthly_labels|json_script:"monthly-labels" }}
+    {{ monthly_income|json_script:"monthly-income" }}
+    {{ monthly_expenses|json_script:"monthly-expenses" }}
+    {{ category_labels|json_script:"category-labels" }}
+    {{ category_values|json_script:"category-values" }}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        const monthlyLabels = JSON.parse(
+            document.getElementById('monthly-labels').textContent
+        );
+        const monthlyIncome = JSON.parse(
+            document.getElementById('monthly-income').textContent
+        );
+        const monthlyExpenses = JSON.parse(
+            document.getElementById('monthly-expenses').textContent
+        );
+
+        const monthlyCanvas = document.getElementById('monthlyChart');
+
+        new Chart(monthlyCanvas, {
+            type: 'bar',
+            data: {
+                labels: monthlyLabels,
+                datasets: [
+                    {
+                        label: 'Income',
+                        data: monthlyIncome,
+                        backgroundColor: '#16a34a',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Expenses',
+                        data: monthlyExpenses,
+                        backgroundColor: '#ef4444',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const categoryLabels = JSON.parse(
+            document.getElementById('category-labels').textContent
+        );
+        const categoryValues = JSON.parse(
+            document.getElementById('category-values').textContent
+        );
+
+        const categoryCanvas = document.getElementById('categoryChart');
+
+        if (categoryCanvas && categoryLabels.length > 0) {
+            new Chart(categoryCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: categoryLabels,
+                    datasets: [{
+                        data: categoryValues,
+                        backgroundColor: [
+                            '#6366f1',
+                            '#06b6d4',
+                            '#f59e0b',
+                            '#ef4444',
+                            '#10b981',
+                            '#8b5cf6',
+                            '#ec4899',
+                            '#64748b'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+
+{% endif %}
+
+{% endblock %}

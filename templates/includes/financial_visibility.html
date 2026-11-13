@@ -1,0 +1,123 @@
+{% if balances_visible %}
+
+    <!-- Clicking this button immediately hides financial amounts -->
+    <form method="POST"
+          action="{% url 'toggle_balance_visibility' %}"
+          class="d-inline">
+
+        {% csrf_token %}
+
+        <input type="hidden" name="action" value="hide">
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+        <button type="submit"
+                class="btn btn-light"
+                title="Hide financial amounts"
+                aria-label="Hide financial amounts">
+
+            <i class="bi bi-eye-slash"></i>
+        </button>
+
+    </form>
+
+{% else %}
+
+    <!-- Clicking this button opens the password modal -->
+    <button type="button"
+            class="btn btn-light"
+            data-bs-toggle="modal"
+            data-bs-target="#financialVisibilityModal"
+            title="Show financial amounts"
+            aria-label="Show financial amounts">
+
+        <i class="bi bi-eye"></i>
+    </button>
+
+    <!-- Password verification modal -->
+    <div class="modal fade"
+         id="financialVisibilityModal"
+         tabindex="-1"
+         aria-labelledby="financialVisibilityModalLabel"
+         aria-hidden="true">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <form method="POST"
+                      action="{% url 'toggle_balance_visibility' %}">
+
+                    {% csrf_token %}
+
+                    <input type="hidden" name="action" value="reveal">
+                    <input type="hidden"
+                           name="next"
+                           value="{{ request.get_full_path }}">
+
+                    <div class="modal-header">
+
+                        <h5 class="modal-title"
+                            id="financialVisibilityModalLabel">
+
+                            <i class="bi bi-shield-lock me-2"></i>
+                            Verify Your Password
+
+                        </h5>
+
+                        <button type="button"
+                                class="btn-close"
+                                data-bs-dismiss="modal"
+                                aria-label="Close">
+                        </button>
+
+                    </div>
+
+                    <div class="modal-body">
+
+                        <p class="text-muted small">
+                            Enter your account password to view your
+                            financial information.
+                        </p>
+
+                        <label for="financialPassword"
+                               class="form-label">
+                            Account Password
+                        </label>
+
+                        <input type="password"
+                               name="password"
+                               id="financialPassword"
+                               class="form-control"
+                               placeholder="Enter your password"
+                               autocomplete="current-password"
+                               required>
+
+                    </div>
+
+                    <div class="modal-footer">
+
+                        <button type="button"
+                                class="btn btn-light"
+                                data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+
+                        <button type="submit"
+                                class="btn btn-primary">
+
+                            <i class="bi bi-unlock me-1"></i>
+                            Verify & Show
+
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+{% endif %}

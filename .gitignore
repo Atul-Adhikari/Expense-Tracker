@@ -1,0 +1,58 @@
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Django database
+db.sqlite3
+db.sqlite3-journal
+
+# User uploaded media
+/media/
+
+# Collected static files
+/staticfiles/
+
+# Python testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Django and Python logs
+*.log
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build and distribution
+build/
+dist/
+*.egg-info/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.bak

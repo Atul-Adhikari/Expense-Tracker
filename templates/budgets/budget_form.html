@@ -1,0 +1,164 @@
+
+{% extends 'base.html' %}
+
+{% block title %}{{ page_title }} | ExpenseFlow{% endblock %}
+{% block page_heading %}{{ page_title }}{% endblock %}
+
+{% block content %}
+
+<div class="form-page">
+
+    <div class="form-heading">
+        <h3>{{ page_title }}</h3>
+        <p>
+            Set a monthly spending limit for all expenses
+            or a specific category.
+        </p>
+    </div>
+
+
+    <div class="form-card">
+
+        {% if balances_visible and form %}
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+
+            <div class="mb-4">
+
+                <label for="{{ form.category.id_for_label }}" class="form-label">
+                    Budget Category
+                </label>
+
+                {{ form.category }}
+
+                {% if form.category.help_text %}
+                    <div class="form-text">
+                        {{ form.category.help_text }}
+                    </div>
+                {% endif %}
+
+                {% for error in form.category.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="mb-4">
+
+                <label for="{{ form.amount.id_for_label }}" class="form-label">
+                    Budget Amount
+                </label>
+
+                {{ form.amount }}
+
+                {% if form.amount.help_text %}
+                    <div class="form-text">
+                        {{ form.amount.help_text }}
+                    </div>
+                {% endif %}
+
+                {% for error in form.amount.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ error }}
+                    </div>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="row">
+
+                <div class="col-md-6 mb-4">
+
+                    <label for="{{ form.currency.id_for_label }}" class="form-label">
+                        Currency
+                    </label>
+
+                    {{ form.currency }}
+
+                    {% for error in form.currency.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="col-md-6 mb-4">
+
+                    <label for="{{ form.period_start.id_for_label }}" class="form-label">
+                        Budget Month
+                    </label>
+
+                    {{ form.period_start }}
+
+                    {% for error in form.period_start.errors %}
+                        <div class="text-danger small mt-1">
+                            {{ error }}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+
+                Your actual spending will be calculated automatically
+                from your recorded expense transactions.
+            </div>
+
+
+            <div class="d-flex flex-wrap gap-2 mt-4">
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i>
+                    {{ button_text }}
+                </button>
+
+                <a href="{% url 'budget_list' %}" class="btn btn-light">
+                    Cancel
+                </a>
+
+            </div>
+
+        </form>
+
+        {% else %}
+
+            <div class="text-center py-5">
+
+                <i class="bi bi-shield-lock"
+                   style="font-size: 42px; color: #94a3b8;"></i>
+
+                <h5 class="mt-3">Financial Information Locked</h5>
+
+                <p class="text-muted">
+                    Click the eye icon above and verify your password
+                    to access this budget form.
+                </p>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
